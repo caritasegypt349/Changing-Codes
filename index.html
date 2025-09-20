@@ -2,108 +2,87 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>البحث واستبدال اكواد جهة التمويل</title>
+  <title>برنامج البحث والاستبدال للأكواد جهات التمويل</title>
   <style>
     body {
-      font-family: 'Tajawal', Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f8f9fa;
-      color: #333;
-      margin: 20px;
+      margin: 0;
+      padding: 20px;
     }
     .container {
       max-width: 900px;
       margin: auto;
       background: #fff;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
-      color: #007bff;
       margin-bottom: 20px;
+      color: #2c3e50;
     }
     textarea, input {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
-      margin-bottom: 15px;
-    }
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      font-size: 16px;
     }
     button {
-      flex: 1;
-      padding: 12px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 6px;
-      background: #007bff;
-      color: #fff;
+      border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
-      transition: 0.3s;
+      margin: 5px;
     }
-    button:hover {
-      background: #0056b3;
-    }
-    #result, .results-list {
-      margin-top: 20px;
+    .primary { background: #007bff; color: #fff; }
+    .success { background: #28a745; color: #fff; }
+    .danger { background: #dc3545; color: #fff; }
+    .secondary { background: #6c757d; color: #fff; }
+    #output, #searchResults {
+      margin-top: 15px;
       padding: 15px;
-      border: 1px dashed #007bff;
-      border-radius: 6px;
-      background: #f1f3f5;
+      background: #f1f1f1;
+      border-radius: 8px;
+      min-height: 50px;
       white-space: pre-wrap;
-      font-weight: bold;
+      font-size: 16px;
     }
-    .results-list {
-      max-height: 400px;
-      overflow-y: auto;
-      list-style: none;
-      padding: 0;
-    }
-    .results-list li {
-      padding: 8px;
+    .result-item {
+      padding: 5px;
       border-bottom: 1px solid #ddd;
     }
-    .results-list li span.code {
-      font-weight: bold;
-      color: #555;
-      margin-left: 8px;
-    }
+    .result-item:last-child { border-bottom: none; }
+    .not-found { color: red; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>البحث واستبدال كود جهات التمويل</h1>
+    <h1>🔎 برنامج البحث والاستبدال للأكواد جهات التمويل</h1>
 
-    <!-- جزء الاستبدال -->
-    <h3>📝 استبدال اكواد جهات التمويل بأسماء</h3>
-    <textarea id="inputBox" placeholder="مثال: CB13000001 CB14000001"></textarea>
-    <div class="buttons">
-      <button onclick="replaceCodes()">استبدال</button>
-      <button onclick="copyToClipboard()">نسخ النتيجة</button>
-      <button onclick="resetForm()">مسح</button>
-    </div>
-    <div id="result"></div>
+    <h3>إدخال الأكواد (مفصولة بفواصل أو أسطر):</h3>
+    <textarea id="codesInput" rows="4" placeholder="مثال: MF00171007"></textarea>
+    <button class="primary" onclick="replaceCodes()">استبدال بالأسماء</button>
+    <button class="success" onclick="copyToClipboard()">نسخ النتائج</button>
+    <button class="danger" onclick="resetForm()">مسح الكل</button>
+    
+    <h3>النتائج:</h3>
+    <div id="output"></div>
 
-    <hr>
-
-    <!-- جزء البحث -->
-    <h3>🔍 البحث عن كود جهة التمويل و اسماء الجهات</h3>
-    <input type="text" id="codeSearch" placeholder="ابحث بجزء من كود جهة التمويل...">
-    <input type="text" id="nameSearch" placeholder="ابحث بجزء من الاسم...">
-    <ul id="results" class="results-list"></ul>
-    <p id="noResultsText" style="display:none; text-align:center; color:#888;">لا توجد نتائج.</p>
+    <h3>بحث عن كود أو اسم جهات التمويل:</h3>
+    <input type="text" id="searchInput" placeholder="أدخل جزء من الكود أو الاسم..." onkeyup="searchCodes()">
+    <div id="searchResults"></div>
   </div>
 
   <script>
-    // قاعدة البيانات
-    const data = {
-     "CB01280001": "المصرف المتحد",
+    // قاعدة البيانات (ضيف هنا الأكواد والأسماء)
+    const codeMap = {
+      "MF00171007": "شركة أبو ظبي الإسلامي للتمويل متناهي الصغر - أرزاق",
+      "CB01280001": "المصرف المتحد",
         "CB13000001": "البنك التجاري الدولي مصر",
         "CB14000001": "بنك بلوم - مصر",
         "CB15000001": "بنك الامارات دبى الوطنى",
@@ -705,58 +684,68 @@
         "IC00010001": "المصرية للتأمين (حياة)",
         "UC00010001": "الشركة الوطنية للغاز (ناتجاز)",
         "UC00020001": "أورانج مصر للاتصالات"
-      // 👉 تقدر تكمل باقي القاموس من ملفاتك
+      // مثال:
+      // "كود": "اسم الجهة"
     };
 
-    // استبدال الأكواد
+    // استبدال الأكواد بالأسماء
     function replaceCodes() {
-      const input = document.getElementById("inputBox").value.trim();
-      if (!input) return;
-      const codes = input.split(/\s+/);
-      const replaced = codes.map(c => data[c] || c).join("\n");
-      document.getElementById("result").innerText = replaced;
-    }
-
-    function copyToClipboard() {
-      const result = document.getElementById("result").innerText;
-      if (result) {
-        navigator.clipboard.writeText(result);
-        alert("تم النسخ ✅");
+      let input = document.getElementById("codesInput").value;
+      if (!input.trim()) {
+        document.getElementById("output").innerText = "من فضلك أدخل الأكواد أولاً.";
+        return;
       }
+      let codes = input.split(/[\s,،]+/); // تقسيم بالكومّا أو مسافة أو سطر
+      let results = codes.map(code => {
+        if (codeMap[code]) {
+          return code + " ➝ " + codeMap[code];
+        } else if (code.trim() !== "") {
+          return code + " ➝ " + "غير موجود";
+        }
+      }).filter(Boolean);
+      document.getElementById("output").innerText = results.join("\n");
     }
 
+    // نسخ النتائج
+    function copyToClipboard() {
+      let text = document.getElementById("output").innerText;
+      if (!text.trim()) {
+        alert("لا يوجد نتائج لنسخها.");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        alert("تم النسخ!");
+      });
+    }
+
+    // مسح كل البيانات
     function resetForm() {
-      document.getElementById("inputBox").value = "";
-      document.getElementById("result").innerText = "";
+      document.getElementById("codesInput").value = "";
+      document.getElementById("output").innerText = "";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("searchResults").innerHTML = "";
     }
 
     // البحث
-    document.getElementById("codeSearch").addEventListener("input", search);
-    document.getElementById("nameSearch").addEventListener("input", search);
+    function searchCodes() {
+      let query = document.getElementById("searchInput").value.trim().toLowerCase();
+      let resultsDiv = document.getElementById("searchResults");
+      resultsDiv.innerHTML = "";
+      if (!query) return;
 
-    function search() {
-      const codeQ = document.getElementById("codeSearch").value.trim().toLowerCase();
-      const nameQ = document.getElementById("nameSearch").value.trim().toLowerCase();
-      const results = document.getElementById("results");
-      const noRes = document.getElementById("noResultsText");
-      results.innerHTML = "";
-
-      const entries = Object.entries(data).filter(([code, name]) =>
-        code.toLowerCase().includes(codeQ) &&
-        name.toLowerCase().includes(nameQ)
-      );
-
-      if (entries.length === 0) {
-        noRes.style.display = "block";
-        return;
+      let found = false;
+      for (let code in codeMap) {
+        if (code.toLowerCase().includes(query) || codeMap[code].toLowerCase().includes(query)) {
+          let div = document.createElement("div");
+          div.className = "result-item";
+          div.innerText = code + " ➝ " + codeMap[code];
+          resultsDiv.appendChild(div);
+          found = true;
+        }
       }
-      noRes.style.display = "none";
-
-      entries.forEach(([code, name]) => {
-        const li = document.createElement("li");
-        li.innerHTML = `<span class="code">${code}</span> - ${name}`;
-        results.appendChild(li);
-      });
+      if (!found) {
+        resultsDiv.innerHTML = "<div class='not-found'>لا توجد نتائج مطابقة</div>";
+      }
     }
   </script>
 </body>
